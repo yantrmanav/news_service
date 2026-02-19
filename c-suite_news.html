@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>C-Suite Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #111118;
+    --surface2:  #17171f;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --accent:    #c8a96e;
+    --accent2:   #e8c98e;
+    --text:      #e8e6e1;
+    --muted:     #6b6880;
+    --muted2:    #9994aa;
+    --red:       #e05a5a;
+    --green:     #5ab87e;
+    --blue:      #5a90e0;
+    --purple:    #9b7fe8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── HEADER ─────────────────────────────────────────────── */
+  header {
+    padding: 32px 48px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 900;
+    color: #0a0a0f;
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .header-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  #upload-btn {
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #upload-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  #file-input { display: none; }
+
+  #article-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+
+  /* ─── CONTROLS ───────────────────────────────────────────── */
+  .controls {
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+    background: var(--surface);
+  }
+
+  .search-wrap {
+    flex: 1; min-width: 240px;
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute; left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); pointer-events: none;
+  }
+
+  #search {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search:focus { border-color: var(--accent); }
+  #search::placeholder { color: var(--muted); }
+
+  .filter-group {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 7px 14px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    color: var(--muted2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #0a0a0f; font-weight: 600;
+  }
+
+  .sort-select {
+    padding: 9px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6880' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  /* ─── MAIN GRID ───────────────────────────────────────────── */
+  main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    height: calc(100vh - 130px);
+    overflow: hidden;
+  }
+
+  /* ─── ARTICLE LIST ────────────────────────────────────────── */
+  #article-list {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .article-card {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .article-card:hover { background: var(--surface); }
+  .article-card.active {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding-left: 21px;
+  }
+
+  .card-header {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .card-thumb {
+    width: 52px; height: 52px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .card-thumb-placeholder {
+    width: 52px; height: 52px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--muted);
+  }
+
+  .card-meta {
+    flex: 1; min-width: 0;
+  }
+
+  .card-tags {
+    display: flex; gap: 6px; margin-bottom: 5px; flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .tag-category { background: rgba(200,169,110,0.15); color: var(--accent); }
+  .tag-source   { background: rgba(255,255,255,0.06); color: var(--muted2); }
+
+  .score-badge {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .score-high   { background: rgba(90,184,126,0.15); color: var(--green); }
+  .score-medium { background: rgba(200,169,110,0.15); color: var(--accent); }
+  .score-low    { background: rgba(255,255,255,0.06); color: var(--muted2); }
+
+  .card-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; line-height: 1.45;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-date {
+    font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 5px;
+  }
+
+  /* ─── DETAIL PANEL ─────────────────────────────────────────── */
+  #detail-panel {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+    background: var(--surface);
+  }
+
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; gap: 16px;
+    color: var(--muted);
+  }
+
+  .empty-state-icon {
+    font-size: 48px; opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    margin: 60px auto;
+    max-width: 420px;
+    border: 2px dashed var(--border2);
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(200,169,110,0.05);
+  }
+
+  .upload-zone h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; margin: 16px 0 8px;
+    color: var(--text);
+  }
+
+  .upload-zone p {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .upload-icon { font-size: 40px; }
+
+  /* Detail article content */
+  .detail-hero {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+  }
+
+  .detail-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .detail-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, var(--surface) 0%, rgba(17,17,24,0.4) 60%, transparent 100%);
+  }
+
+  .detail-hero-no-img {
+    height: 80px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-body {
+    padding: 32px 40px 60px;
+  }
+
+  .detail-tags {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 16px; align-items: center;
+  }
+
+  .detail-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; line-height: 1.3;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .detail-meta-row {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+  }
+
+  .detail-meta-row a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .detail-meta-row a:hover { text-decoration: underline; }
+
+  /* Sections */
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  .summary-box {
+    background: linear-gradient(135deg, rgba(200,169,110,0.07), rgba(200,169,110,0.03));
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: 10px;
+    padding: 18px 20px;
+    font-size: 14px; line-height: 1.7;
+    color: var(--text);
+  }
+
+  .content-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    font-size: 13px; line-height: 1.75;
+    color: var(--muted2);
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .pills {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    background: var(--surface2);
+  }
+
+  .pill-company { border-color: rgba(90,144,224,0.3); color: var(--blue); background: rgba(90,144,224,0.07); }
+  .pill-person  { border-color: rgba(155,127,232,0.3); color: var(--purple); background: rgba(155,127,232,0.07); }
+  .pill-number  { border-color: rgba(90,184,126,0.3); color: var(--green); background: rgba(90,184,126,0.07); }
+
+  /* Score bar */
+  .score-bar-wrap {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .score-bar-track {
+    flex: 1; height: 6px;
+    background: var(--surface2);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%; border-radius: 100px;
+    transition: width 0.6s ease;
+  }
+
+  .score-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    min-width: 32px; text-align: right;
+  }
+
+  /* Action buttons */
+  .action-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .action-btn.primary {
+    background: var(--accent); border-color: var(--accent);
+    color: #0a0a0f; font-weight: 600;
+  }
+  .action-btn.primary:hover { background: var(--accent2); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9998;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    overflow-x: auto;
+  }
+
+  .stat-item {
+    padding: 12px 24px;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-lbl {
+    font-size: 10px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  /* Empty list */
+  .no-results {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Download all */
+  #dl-all {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #dl-all:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    #detail-panel { display: none; }
+    header { padding: 20px 20px; }
+    .controls { padding: 14px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">C</div>
+    <div>
+      <div class="logo-text">Intelligence</div>
+      <div class="logo-sub">C-Suite · Executive Briefing</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="article-count" style="display:none"></span>
+    <button id="dl-all" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download All JSON
+    </button>
+    <button id="upload-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Load JSON File
+    </button>
+    <input type="file" id="file-input" accept=".json"/>
+  </div>
+</header>
+
+<div class="stats-bar" id="stats-bar" style="display:none"></div>
+
+<div class="controls" id="controls" style="display:none">
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="search" placeholder="Search titles, summaries, companies, people…"/>
+  </div>
+  <div class="filter-group" id="cat-filters"></div>
+  <select class="sort-select" id="sort-select">
+    <option value="score">Sort: Relevancy</option>
+    <option value="date">Sort: Date</option>
+    <option value="source">Sort: Source</option>
+  </select>
+</div>
+
+<main>
+  <div id="article-list">
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">📊</div>
+      <h2>Load Intelligence File</h2>
+      <p>Upload the JSON output from the C-Suite Engine to browse, filter, and export your briefing.</p>
+      <p style="margin-top:12px; color: var(--accent); font-size:12px; font-family: 'DM Mono', monospace;">
+        csuite_intelligence_*.json
+      </p>
+    </div>
+  </div>
+
+  <div id="detail-panel">
+    <div class="empty-state">
+      <div class="empty-state-icon">←</div>
+      <p>Select an article to read the full briefing</p>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────
+let allArticles = [];
+let filtered    = [];
+let activeIdx   = -1;
+let activeCategory = 'All';
+
+const CATEGORY_COLORS = {
+  'C-Suite':      '#c8a96e',
+  'Funding':      '#5ab87e',
+  'M&A':          '#e05a5a',
+  'Tech':         '#5a90e0',
+  'Startup':      '#9b7fe8',
+  'HR':           '#e89b5a',
+  'Market':       '#5ac8c8',
+  'Business':     '#c85a8a',
+  'Regulation':   '#e0c05a',
+  'Industrialist':'#a0c8e0',
+  'General':      '#6b6880',
+};
+
+// ─── UTILS ────────────────────────────────────────────────────
+function toast(msg, icon='✓') {
+  const el  = document.getElementById('toast');
+  const msg_ = document.getElementById('toast-msg');
+  msg_.textContent = icon + '  ' + msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function copyToClipboard(text, label='Copied!') {
+  navigator.clipboard.writeText(text).then(() => toast(label));
+}
+
+function scoreColor(s) {
+  if (s >= 70) return '#5ab87e';
+  if (s >= 50) return '#c8a96e';
+  return '#6b6880';
+}
+
+function scoreClass(s) {
+  if (s >= 70) return 'score-high';
+  if (s >= 50) return 'score-medium';
+  return 'score-low';
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return 'Date N/A';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  } catch { return dateStr; }
+}
+
+function catEmoji(cat) {
+  const m = {
+    'C-Suite':'👔','Funding':'💰','M&A':'🤝','Tech':'⚙️','Startup':'🚀',
+    'HR':'👥','Market':'📈','Business':'🏢','Regulation':'⚖️',
+    'Industrialist':'🏭','General':'📰'
+  };
+  return m[cat] || '📰';
+}
+
+// ─── FILE LOAD ─────────────────────────────────────────────────
+function loadJSON(text) {
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data) || !data.length) throw new Error('No articles');
+    allArticles = data;
+    initUI();
+    toast(`Loaded ${data.length} articles`, '📊');
+  } catch(e) {
+    toast('Invalid JSON file: ' + e.message, '✗');
+  }
+}
+
+document.getElementById('upload-btn').onclick = () =>
+  document.getElementById('file-input').click();
+
+document.getElementById('file-input').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => loadJSON(ev.target.result);
+  r.readAsText(f);
+};
+
+const zone = document.getElementById('upload-zone');
+zone.onclick = () => document.getElementById('file-input').click();
+zone.ondragover = e => { e.preventDefault(); zone.classList.add('drag-over'); };
+zone.ondragleave = () => zone.classList.remove('drag-over');
+zone.ondrop = e => {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => loadJSON(ev.target.result);
+  r.readAsText(f);
+};
+
+// ─── INIT UI ──────────────────────────────────────────────────
+function initUI() {
+  document.getElementById('controls').style.display = 'flex';
+  document.getElementById('stats-bar').style.display = 'flex';
+  document.getElementById('dl-all').style.display = 'flex';
+  document.getElementById('article-count').style.display = 'block';
+
+  buildStats();
+  buildCategoryFilters();
+  applyFilters();
+}
+
+function buildStats() {
+  const cats   = {};
+  let   total  = allArticles.length;
+  let   avgScore = Math.round(allArticles.reduce((s,a) => s + (a.relevancy_score||0), 0) / total);
+  let   csuite = allArticles.filter(a => a.category === 'C-Suite').length;
+  let   funding = allArticles.filter(a => a.category === 'Funding').length;
+
+  allArticles.forEach(a => { cats[a.category] = (cats[a.category]||0)+1; });
+  const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+
+  const bar = document.getElementById('stats-bar');
+  bar.innerHTML = `
+    <div class="stat-item"><div class="stat-val">${total}</div><div class="stat-lbl">Articles</div></div>
+    <div class="stat-item"><div class="stat-val">${avgScore}</div><div class="stat-lbl">Avg Score</div></div>
+    <div class="stat-item"><div class="stat-val">${csuite}</div><div class="stat-lbl">C-Suite</div></div>
+    <div class="stat-item"><div class="stat-val">${funding}</div><div class="stat-lbl">Funding</div></div>
+    ${topCat ? `<div class="stat-item"><div class="stat-val" style="font-size:15px">${topCat[0]}</div><div class="stat-lbl">Top Category</div></div>` : ''}
+  `;
+}
+
+function buildCategoryFilters() {
+  const cats = ['All', ...new Set(allArticles.map(a => a.category).filter(Boolean))];
+  const wrap = document.getElementById('cat-filters');
+  wrap.innerHTML = cats.map(c => `
+    <button class="filter-btn ${c==='All'?'active':''}" data-cat="${c}">${catEmoji(c)} ${c}</button>
+  `).join('');
+  wrap.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.onclick = () => {
+      wrap.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      applyFilters();
+    };
+  });
+}
+
+// ─── FILTERING + SORTING ─────────────────────────────────────
+function applyFilters() {
+  const q    = document.getElementById('search').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+
+  filtered = allArticles.filter(a => {
+    if (activeCategory !== 'All' && a.category !== activeCategory) return false;
+    if (!q) return true;
+    return [
+      a.title, a.summary, a.source,
+      ...(a.companies||[]), ...(a.key_people||[])
+    ].some(s => (s||'').toLowerCase().includes(q));
+  });
+
+  if (sort === 'score') filtered.sort((a,b) => (b.relevancy_score||0) - (a.relevancy_score||0));
+  else if (sort === 'date') filtered.sort((a,b) => new Date(b.published_at||0) - new Date(a.published_at||0));
+  else if (sort === 'source') filtered.sort((a,b) => (a.source||'').localeCompare(b.source||''));
+
+  renderList();
+  document.getElementById('article-count').textContent = `${filtered.length} / ${allArticles.length}`;
+}
+
+document.getElementById('search').oninput = applyFilters;
+document.getElementById('sort-select').onchange = applyFilters;
+
+// ─── RENDER LIST ──────────────────────────────────────────────
+function renderList() {
+  const list = document.getElementById('article-list');
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="no-results">No articles match your filters</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map((a, i) => {
+    const color = CATEGORY_COLORS[a.category] || '#6b6880';
+    const thumb = a.image_url
+      ? `<img class="card-thumb" src="${esc(a.image_url)}" onerror="this.style.display='none'" />`
+      : `<div class="card-thumb-placeholder">${catEmoji(a.category)}</div>`;
+
+    return `
+      <div class="article-card ${i===activeIdx?'active':''}" data-idx="${i}" onclick="selectArticle(${i})">
+        <div class="card-header">
+          ${thumb}
+          <div class="card-meta">
+            <div class="card-tags">
+              <span class="tag tag-category" style="background:${color}22;color:${color}">${a.category||'General'}</span>
+              <span class="tag tag-source">${esc(a.source||'')}</span>
+              <span class="score-badge ${scoreClass(a.relevancy_score||0)}" style="margin-left:auto">${a.relevancy_score||0}</span>
+            </div>
+            <div class="card-title">${esc(a.title||'')}</div>
+            <div class="card-date">${fmt(a.published_at)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── SELECT ARTICLE ───────────────────────────────────────────
+function selectArticle(idx) {
+  activeIdx = idx;
+  const a   = filtered[idx];
+
+  // Highlight in list
+  document.querySelectorAll('.article-card').forEach((el,i) => {
+    el.classList.toggle('active', i === idx);
+  });
+
+  const panel = document.getElementById('detail-panel');
+  const color  = CATEGORY_COLORS[a.category] || '#6b6880';
+  const score  = a.relevancy_score || 0;
+
+  const heroHtml = a.image_url
+    ? `<div class="detail-hero">
+         <img src="${esc(a.image_url)}" onerror="this.parentElement.innerHTML='<div class=detail-hero-no-img></div>'" />
+         <div class="detail-hero-overlay"></div>
+       </div>`
+    : `<div class="detail-hero-no-img"></div>`;
+
+  const companiesHtml = (a.companies||[]).length
+    ? `<div class="section">
+         <div class="section-label">Companies</div>
+         <div class="pills">${(a.companies||[]).map(c=>`<span class="pill pill-company">${esc(c)}</span>`).join('')}</div>
+       </div>`
+    : '';
+
+  const peopleHtml = (a.key_people||[]).length
+    ? `<div class="section">
+         <div class="section-label">Key People</div>
+         <div class="pills">${(a.key_people||[]).map(p=>`<span class="pill pill-person">${esc(p)}</span>`).join('')}</div>
+       </div>`
+    : '';
+
+  const numbersHtml = (a.key_numbers||[]).length
+    ? `<div class="section">
+         <div class="section-label">Key Numbers</div>
+         <div class="pills">${(a.key_numbers||[]).map(n=>`<span class="pill pill-number">${esc(n)}</span>`).join('')}</div>
+       </div>`
+    : '';
+
+  const contentHtml = a.content
+    ? `<div class="section">
+         <div class="section-label">Article Content</div>
+         <div class="content-box">${esc(a.content)}</div>
+       </div>`
+    : '';
+
+  panel.innerHTML = `
+    ${heroHtml}
+    <div class="detail-body">
+      <div class="detail-tags">
+        <span class="tag tag-category" style="background:${color}22;color:${color};font-size:11px;padding:4px 10px">${catEmoji(a.category)} ${esc(a.category||'General')}</span>
+        <span class="tag tag-source">${esc(a.source||'')}</span>
+      </div>
+
+      <div class="detail-title">${esc(a.title||'')}</div>
+
+      <div class="detail-meta-row">
+        ${a.published_at ? `<span>📅 ${fmt(a.published_at)}</span>` : ''}
+        ${a.fetched_at   ? `<span>🔄 Fetched ${fmt(a.fetched_at)}</span>` : ''}
+        ${a.url          ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">🔗 Read Original</a>` : ''}
+      </div>
+
+      <div class="section">
+        <div class="section-label">Relevancy Score</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:${score}%;background:${scoreColor(score)}"></div>
+          </div>
+          <div class="score-num" style="color:${scoreColor(score)}">${score}</div>
+        </div>
+      </div>
+
+      ${a.summary ? `
+        <div class="section">
+          <div class="section-label">Executive Summary</div>
+          <div class="summary-box">${esc(a.summary)}</div>
+        </div>
+      ` : ''}
+
+      ${companiesHtml}
+      ${peopleHtml}
+      ${numbersHtml}
+      ${contentHtml}
+
+      <div class="action-row">
+        <button class="action-btn primary" onclick="copySummary(${idx})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Summary
+        </button>
+        <button class="action-btn" onclick="copyTitle(${idx})">
+          Copy Title
+        </button>
+        <button class="action-btn" onclick="copyURL(${idx})">
+          Copy URL
+        </button>
+        <button class="action-btn" onclick="copyFull(${idx})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Copy Full JSON
+        </button>
+        <button class="action-btn" onclick="downloadArticle(${idx})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Article
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ─── COPY / DOWNLOAD ACTIONS ──────────────────────────────────
+function copySummary(idx)  { copyToClipboard(filtered[idx].summary||'', 'Summary copied'); }
+function copyTitle(idx)    { copyToClipboard(filtered[idx].title||'', 'Title copied'); }
+function copyURL(idx)      { copyToClipboard(filtered[idx].url||'', 'URL copied'); }
+function copyFull(idx)     { copyToClipboard(JSON.stringify(filtered[idx], null, 2), 'Full JSON copied'); }
+
+function downloadArticle(idx) {
+  const a = filtered[idx];
+  const blob = new Blob([JSON.stringify(a, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `article_${idx+1}_${(a.title||'article').slice(0,30).replace(/\W+/g,'_')}.json`;
+  link.click();
+  toast('Article downloaded');
+}
+
+document.getElementById('dl-all').onclick = () => {
+  const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `csuite_intelligence_filtered_${Date.now()}.json`;
+  link.click();
+  toast(`Downloaded ${filtered.length} articles`);
+};
+
+// ─── ESCAPE HTML ─────────────────────────────────────────────
+function esc(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+// ─── KEYBOARD NAV ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!filtered.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    selectArticle(Math.min(activeIdx+1, filtered.length-1));
+    document.querySelectorAll('.article-card')[activeIdx]?.scrollIntoView({block:'nearest'});
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    selectArticle(Math.max(activeIdx-1, 0));
+    document.querySelectorAll('.article-card')[activeIdx]?.scrollIntoView({block:'nearest'});
+  }
+});
+</script>
+</body>
+</html>
